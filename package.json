@@ -1,0 +1,35 @@
+{
+  "name": "imp.pass-backend",
+  "version": "1.0.0",
+  "description": "imp.pass backend",
+  "license": "ISC",
+  "author": "Vipul Kumar Gupta",
+  "type": "commonjs",
+  "main": "dist/main.js",
+  "scripts": {
+    "clean": "rm -rf dist/ debug/",
+    "build": "tsc",
+    "dev": "DEBUG=true ts-node-dev src/main.ts",
+    "start": "node dist/main.js",
+    "debug": "DEBUG=true tsc --sourceMap --outDir debug/ && node --inspect-brk debug/main.js"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.0.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "firebase-admin": "^13.4.0",
+    "jest": "^30.0.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0"
+  }
+}
