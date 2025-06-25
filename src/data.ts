@@ -3,11 +3,10 @@ import { Errors } from "./errorMap";
 import app from "./firebase";
 
 
-function id(pid: string) {
-  return crypto.subtle.digest(
-    'SHA-1', Buffer.from(pid)).then(hash =>
-      encodeToString(hash)
-    )
+export async function id(pid: string) {
+  const hash = await crypto.subtle.digest(
+        'SHA-1', Buffer.from(pid));
+    return encodeToString(hash);
 }
 
 export async function createPassword(password: { pid: string, password: string }, hash: string, user: string) {
@@ -34,8 +33,12 @@ export async function retrievePassword(pid: string, user: string, hash: string) 
 
   return id(pid).then(() => dataCollection.doc(userId)
     .collection('passwords').doc(docId).get().then(
-      (doc) => {
-        if (doc.exists) return decrypt(doc.get('enc'), hash).catch(() => { throw "Error while decrypting." })
+      async (doc) => {
+        if (doc.exists) try {
+            return await decrypt(doc.get('enc'), hash);
+        } catch {
+            throw "Error while decrypting.";
+        }
         else throw Errors.PID_NOT_EXISTS;
       }
     )
@@ -64,12 +67,10 @@ export async function updatePassword(
   const docId = await id(pid)
   const docRef = dataCollection.doc(userId)
     .collection('passwords').doc(docId)
-  return docRef.get().then((res) => {
+  return docRef.get().then(async (res) => {
     if (res.exists) {
-      return encrypt(updatedPassword, masterPassword)
-        .then(enc => {
-          docRef.update({ enc: enc })
-        })
+      const enc = await encrypt(updatedPassword, masterPassword);
+        docRef.update({ enc: enc });
     } else {
       throw Errors.PID_NOT_EXISTS
     }

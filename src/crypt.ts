@@ -27,20 +27,16 @@ export const decodeToString = (str: string) => Buffer.from(str, encoding).toStri
 export const decodeToBinary = (str: string) => Buffer.from(str, encoding)
 export const hashPassword = hash
 export const verifyHash = compare
-export const encrypt = (data: string, masterPassword: string) => {
+export const encrypt = async (data: string, masterPassword: string) => {
   const initVector = crypto.getRandomValues(new Uint8Array(12))
-  return deriveKey(masterPassword).then(key => {
-    return crypto.subtle.encrypt({ name: algorithm, iv: initVector }, key, Buffer.from(data))
-  }).then(encrypted => {
-    const strEquivalent = encodeToString(encrypted)
-    return { cipher: strEquivalent, iv: Buffer.from(initVector.buffer).toString(encoding) }
-  })
+  const key = await deriveKey(masterPassword);
+    const encrypted = await crypto.subtle.encrypt({ name: algorithm, iv: initVector }, key, Buffer.from(data));
+    const strEquivalent = encodeToString(encrypted);
+    return { cipher: strEquivalent, iv: Buffer.from(initVector.buffer).toString(encoding) };
 }
-export const decrypt = ({ cipher, iv }: { cipher: string, iv: string }, masterPassword: string) => {
+export const decrypt = async ({ cipher, iv }: { cipher: string, iv: string }, masterPassword: string) => {
   const initVector = decodeToBinary(iv)
-  return deriveKey(masterPassword).then(key => {
-    return crypto.subtle.decrypt({ name: algorithm, iv: initVector }, key, decodeToBinary(cipher))
-  }).then(data => {
-    return Buffer.from(data).toString()
-  })
+  const key = await deriveKey(masterPassword);
+    const data = await crypto.subtle.decrypt({ name: algorithm, iv: initVector }, key, decodeToBinary(cipher));
+    return Buffer.from(data).toString();
 }

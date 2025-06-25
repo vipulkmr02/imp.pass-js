@@ -5,11 +5,7 @@ import cors from "cors";
 import { changePassword, registerUser, verifyUser } from "./middlewares";
 import { ERROR, Errors } from "./errorMap";
 import {
-  createPassword,
-  deletePassword,
-  retrievePassword,
-  updatePassword,
-  updatePid,
+  createPassword, deletePassword, retrievePassword, updatePassword, updatePid,
 } from "./data";
 
 const app = express();
@@ -90,7 +86,7 @@ app.get("/delete", verifyUser, (req, res) => {
   const user = req.headers.email;
   if (typeof req.headers.passwordHash == "string") {
     if (typeof pid == "string" && typeof user == "string") {
-      deletePassword(pid, user).then((result) => {
+      deletePassword(pid, user).then(() => {
         res.send({ message: `Password with pID ${pid} deleted` });
       });
     } else res.status(500).send({ message: "BAD REQUEST" });
@@ -149,7 +145,7 @@ app.get("/changePassword", verifyUser, (req, res) => {
     changePassword({ user: email, current: hash, newPassword: newPassword })
       .then(() => {
         res.send({ message: "Password Changed" });
-      }).catch((err:Error) => {res.status(500).send(err.message)});
+      }).catch((err: Error) => { res.status(500).send(err.message) });
   } else res.status(500).send(Errors.WRONG_REQUEST);
 });
 

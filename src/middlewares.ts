@@ -44,7 +44,7 @@ export const verifyUser = (
 
   // checking user before verifying
   if (email && password) {
-    id(email as string).then((uid) =>
+    id(email as string).then((uid:string) =>
       db.doc(`users/${uid}`).get().then(
         async (doc) => {
           if (!doc.exists) {
@@ -89,12 +89,11 @@ export const changePassword = async (opts: {
   const userDoc = db.doc(`users/${uid}`);
 
   // re-encrypting
-  return userDoc.get().then((doc) => {
+  return userDoc.get().then(async (doc) => {
     if (!doc.exists) throw Errors.USER_NOT_FOUND;
     else {
-      return hashPassword(newPassword, 10).then(
-        (newHash) => userDoc.update({ passwordHash: Buffer.from(newHash).toString('base64url') }),
-      );
+      const newHash = await hashPassword(newPassword, 10);
+        return await userDoc.update({ passwordHash: Buffer.from(newHash).toString('base64url') });
     }
   }).then(() =>
     passwordCol.get()
