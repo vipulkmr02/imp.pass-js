@@ -68,8 +68,6 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 
-serviceAccount.json
-firebase.ts
 dist/
 debug/
 firestore*
