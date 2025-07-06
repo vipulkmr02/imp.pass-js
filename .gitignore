@@ -72,7 +72,6 @@ dist/
 debug/
 firestore*
 tests/
-*fire*
 .firebaserc
 *[dD]ocker*
 .vscode/
