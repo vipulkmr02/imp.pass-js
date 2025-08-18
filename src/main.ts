@@ -24,21 +24,21 @@ const PORT = process.env.PORT ?? 9000;
 app.use(express.json());
 app.use(express.urlencoded());
 
-// BUG: Fix CORS configuration 
-app.use(cors())
-// app.use(cors({
-//   origin: ["http://localhost:4200", process.env.FRONTEND_URL!],
-//   methods: ["GET", "PUT", "POST", "OPTIONS"],
-//   allowedHeaders: [
-//     "Content-Type",
-//     "Connection",
-//     "Cache-Control",
-//     "Authorization",
-//   ],
-//   exposedHeaders: ["Content-Type", "Connection", "Cache-Control", "Session"],
-//   optionsSuccessStatus: 200,
-//   credentials: true,
-// }));
+// BUG: Fix CORS configuration
+// app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:4200", process.env.FRONTEND_URL!],
+  methods: ["GET", "PUT", "POST", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Connection",
+    "Cache-Control",
+    "Authorization",
+  ],
+  exposedHeaders: ["Content-Type", "Connection", "Cache-Control", "Session"],
+  optionsSuccessStatus: 200,
+  credentials: true,
+}));
 app.use(body);
 app.use(session); // custom session middleware
 
@@ -49,16 +49,13 @@ app.get("/", (_, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   registerUser(email, password).then(
-    () =>
-      res.send({
-        message: "User Registered",
-      }),
+    () => res.send({ message: "User Registered" }),
   ).catch((err: ERROR) => {
     if (err.code) {
       res.status(err.code).send({ message: err.message });
     } else {
       res.status(500).send({ message: "Something went wrong." });
-      console.error(err);
+      console.error("ERROR:", err);
     }
   });
 });
@@ -67,6 +64,11 @@ app.get("/initSession", verifyUser, (req, res) => {
   if (req.body._sessionID) {
     res.send({ sessionID: req.body._sessionID });
   }
+});
+
+app.get("/validateSession", session, (req, res) => {
+  if (req.body._sessionData) res.send(1);
+  else res.send(0);
 });
 
 app.put("/new", verifyUser, (req, res) => {

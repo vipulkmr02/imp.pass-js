@@ -137,9 +137,14 @@ export const session = async (
     req.body._sessionID = sessionID;
     const sessionData = await getSession(sessionID);
     if (sessionData !== null) {
+      // if sessionData is found
+      // first we will check if 
+      // it's expired or not
       const timeNow = new Date().valueOf();
       const sessionExpired = sessionData.expireOn < timeNow;
       if (sessionExpired) {
+        // if expired, we will delete
+        // the session on our database.
         await deleteSession(sessionID);
         res.status(ERRORS.SESSION_EXPIRED.code).send(
           { message: ERRORS.SESSION_EXPIRED.message },
@@ -148,6 +153,8 @@ export const session = async (
       }
       req.body._sessionData = sessionData;
     }
+    // if sessionData is not found in the Database,
+    // then the body._sessionData will be undefined
   }
   next();
 };
