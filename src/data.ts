@@ -156,7 +156,7 @@ export async function createSession(userId: string, key: JsonWebKey) {
     key: key,
     createdOn: creationDateEpoch,
     lastUsedOn: creationDateEpoch,
-    expireOn: creationDateEpoch + 600_000, // 5 minutes
+    expireOn: creationDateEpoch + 120_000, // 2 minutes
   };
   await docRef.set(data);
   console.log("Session Created");
@@ -170,6 +170,11 @@ interface sessionData {
   lastUsedOn: number;
   expireOn: number;
 }
+
+/**
+ * Retrieves the document from database
+ * and converts to native JS object
+ */
 export async function getSession(
   sessionId: string,
 ): Promise<null | sessionData> {
@@ -184,4 +189,16 @@ export async function deleteSession(sessionId: string) {
   const db = app.firestore();
   const docRef = db.collection("sessions").doc(sessionId);
   return docRef.delete();
+}
+
+export async function deleteExpiredSessions() {
+  const db = app.firestore();
+  const docs = await db.collection("sessions").get()
+  docs.forEach(async (docData) => {
+    const nowSeconds = (new Date()).valueOf()
+    if (nowSeconds > docData.data().expireOn) {
+      console.log("deleting session", docData.id);
+      await docData.ref.delete()
+    }
+  })
 }

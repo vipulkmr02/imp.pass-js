@@ -17,6 +17,7 @@ import {
   retrievePassword,
   updatePassword,
   updatePid,
+  deleteExpiredSessions
 } from "./data";
 
 const app = express();
@@ -34,6 +35,9 @@ app.use(cors({
     "Connection",
     "Cache-Control",
     "Authorization",
+    "email",
+    "password",
+    "Access-Allow-Origin"
   ],
   exposedHeaders: ["Content-Type", "Connection", "Cache-Control", "Session"],
   optionsSuccessStatus: 200,
@@ -60,6 +64,9 @@ app.post("/register", (req, res) => {
   });
 });
 
+app.get("/identify", verifyUser, (req, res) => {
+})
+
 app.get("/initSession", verifyUser, (req, res) => {
   if (req.body._sessionID) {
     res.send({ sessionID: req.body._sessionID });
@@ -67,8 +74,8 @@ app.get("/initSession", verifyUser, (req, res) => {
 });
 
 app.get("/validateSession", session, (req, res) => {
-  if (req.body._sessionData) res.send(1);
-  else res.send(0);
+  if (req.body._sessionData) res.send({ sessionOk: true });
+  else res.send(res.send({ sessionOk: false }));
 });
 
 app.put("/new", verifyUser, (req, res) => {
@@ -109,14 +116,16 @@ app.get("/password", verifyUser, (req, res) => {
         retrieveAllPasswords(userId, key).then((docs) => {
           res.send(docs);
         });
-      } else {retrievePassword(pid, userId, key).then((pass) => {
+      } else {
+        retrievePassword(pid, userId, key).then((pass) => {
           res.send({ password: pass, pid: pid });
         }).catch((err: ERROR) => {
           console.log(err.message);
           res.status(err.code ?? 500).send({
             message: err.code ? err.message : "Something went wrong",
           });
-        });}
+        });
+      }
     } else res.status(500).send({ message: "BAD REQUEST" });
   } else {
     // means that 'verifyUser' didn't set the passwordHash probably because of
@@ -205,6 +214,14 @@ app.put("/changePassword", verifyUser, (req, res) => {
   } else res.status(500).send(ERRORS.WRONG_REQUEST);
 });
 
+
+// this here is a time based trigger
+// that deletes expired sessions from the database
+// this function will run every 5 second
+// and look for expired sessions and will delete them.
+
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
+  setInterval(deleteExpiredSessions, 5000)
 });

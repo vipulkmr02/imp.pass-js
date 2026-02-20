@@ -10,7 +10,7 @@
     "clean": "rm -rf dist/ debug/",
     "build": "tsc",
     "dev": "DEBUG=true ts-node-dev src/main.ts",
-    "start": "node dist/main.js",
+    "start": "nodemon dist/main.js",
     "debug": "DEBUG=true tsc --sourceMap --outDir debug/ && node --inspect-brk debug/main.js"
   },
   "devDependencies": {
@@ -29,6 +29,7 @@
     "firebase-admin": "^13.4.0",
     "jest": "^30.0.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.11",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0"
   }

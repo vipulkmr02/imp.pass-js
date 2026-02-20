@@ -79,11 +79,11 @@ export const verifyUser = (
                     const key = await getKey(password);
 
                     // create session
-                    const { id: sessionID, data: sessionData } =
-                      await createSession(uid, key);
-                    res.setHeader("Session", sessionID); // this header is for frontend client
-                    req.body._sessionID = sessionID;
-                    req.body._sessionData = sessionData;
+                    const session  = await createSession(uid, key);
+                    debugger;
+                    res.setHeader("Session", session.id); // this header is for frontend client
+                    req.body._sessionID = session.id;
+                    req.body._sessionData = session.data;
                   }
                 },
               );
@@ -113,9 +113,7 @@ export const changePassword = async (opts: {
     const newHash = await hashPassword(newPassword, 10);
     userDoc.update({ passwordHash: newHash });
     const passwordCollection = await passwordCol.get();
-    let recordsUpdated = 0;
-    for (const doc of passwordCollection.docs) {
-      const enc: { cipher: string; iv: string } = doc.get("enc");
+    let recordsUpdated = 0; for (const doc of passwordCollection.docs) { const enc: { cipher: string; iv: string } = doc.get("enc");
       const password = await decryptwjkey(enc, key);
       const newEnc = await encryptwjkey(password, newKey);
       recordsUpdated++;
@@ -158,6 +156,24 @@ export const session = async (
   }
   next();
 };
+
+// export const identify = async (sessionID: string) => {
+//   const sessionData = await getSession(sessionID);
+//   if (sessionData !== null) {
+//     const userId = sessionData.userId
+//
+//     // High Level overview:
+//     // From this userId, we'll retrieve the doc from our DB
+//     // and that doc will be having the user's details
+//
+//     const db = app.firestore()
+//     const docRef = db.collection('users').doc(userId)
+//     const doc = await docRef.get()
+//     const docData = doc.data()
+//
+//     return docData;
+//   } 
+// }
 
 export const body = (
   req: Request,
