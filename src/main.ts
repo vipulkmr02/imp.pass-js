@@ -28,7 +28,7 @@ app.use(express.urlencoded());
 // BUG: Fix CORS configuration
 // app.use(cors());
 app.use(cors({
-  origin: ["http://localhost:4200", process.env.FRONTEND_URL!],
+  origin: ["http://localhost:9000", process.env.FRONTEND_URL!],
   methods: ["GET", "PUT", "POST", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",

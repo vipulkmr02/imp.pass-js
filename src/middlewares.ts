@@ -129,6 +129,7 @@ export const session = async (
   res: Response,
   next: NextFunction,
 ) => {
+  // this is session middleware
   const authHeader = req.headers.authorization;
   if (authHeader?.match(/^Session/)) {
     const sessionID = authHeader.split(" ")[1];

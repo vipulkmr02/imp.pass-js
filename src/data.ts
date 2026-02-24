@@ -156,7 +156,7 @@ export async function createSession(userId: string, key: JsonWebKey) {
     key: key,
     createdOn: creationDateEpoch,
     lastUsedOn: creationDateEpoch,
-    expireOn: creationDateEpoch + 120_000, // 2 minutes
+    expireOn: creationDateEpoch + 600_000, // 10 minutes
   };
   await docRef.set(data);
   console.log("Session Created");
