@@ -25,8 +25,6 @@ const PORT = process.env.PORT ?? 9000;
 app.use(express.json());
 app.use(express.urlencoded());
 
-// BUG: Fix CORS configuration
-// app.use(cors());
 app.use(cors({
   origin: ["http://localhost:9000", process.env.FRONTEND_URL!],
   methods: ["GET", "PUT", "POST", "OPTIONS"],
@@ -120,7 +118,6 @@ app.get("/password", verifyUser, (req, res) => {
         retrievePassword(pid, userId, key).then((pass) => {
           res.send({ password: pass, pid: pid });
         }).catch((err: ERROR) => {
-          console.log(err.message);
           res.status(err.code ?? 500).send({
             message: err.code ? err.message : "Something went wrong",
           });

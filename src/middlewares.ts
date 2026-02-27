@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, response, Response } from "express";
 import app from "./firebase";
 import { ERRORS } from "./errorMap";
 import {
@@ -75,12 +75,9 @@ export const verifyUser = (
                     console.error(err.message);
                     res.end();
                   } else {
-                    // weird way of providing a single argument, right?
                     const key = await getKey(password);
-
                     // create session
-                    const session  = await createSession(uid, key);
-                    debugger;
+                    const session = await createSession(uid, key);
                     res.setHeader("Session", session.id); // this header is for frontend client
                     req.body._sessionID = session.id;
                     req.body._sessionData = session.data;
@@ -113,7 +110,8 @@ export const changePassword = async (opts: {
     const newHash = await hashPassword(newPassword, 10);
     userDoc.update({ passwordHash: newHash });
     const passwordCollection = await passwordCol.get();
-    let recordsUpdated = 0; for (const doc of passwordCollection.docs) { const enc: { cipher: string; iv: string } = doc.get("enc");
+    let recordsUpdated = 0; for (const doc of passwordCollection.docs) {
+      const enc: { cipher: string; iv: string } = doc.get("enc");
       const password = await decryptwjkey(enc, key);
       const newEnc = await encryptwjkey(password, newKey);
       recordsUpdated++;
@@ -129,6 +127,10 @@ export const session = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const blockedUrls = ["/initSession"]
+  for (let url in blockedUrls)
+    if (req.url.endsWith(url)) return
+
   // this is session middleware
   const authHeader = req.headers.authorization;
   if (authHeader?.match(/^Session/)) {
@@ -151,9 +153,19 @@ export const session = async (
         return;
       }
       req.body._sessionData = sessionData;
+    } else {
+      const err = ERRORS.SESSION_EXPIRED;
+      res.status(err.code).send({
+        message: err.message
+      })
+      res.end()
     }
     // if sessionData is not found in the Database,
     // then the body._sessionData will be undefined
+  } else {
+    const err = ERRORS.INVALID_SESSION_ID;
+    res.status(err.code).send({ message: err.message })
+    res.end()
   }
   next();
 };
