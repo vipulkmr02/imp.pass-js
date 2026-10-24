@@ -45,7 +45,8 @@ app.use(cors({
 // Serve the plain HTML/CSS/JS client from this same Express application.
 app.use(express.static("public"));
 
-// app.use(body);
+// Ensure req.body exists for body-less requests (e.g. GET /initSession).
+app.use(body);
 app.use(session); // custom session middleware
 
 app.get("/", (_, res) => {
