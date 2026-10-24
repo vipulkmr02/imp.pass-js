@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11130f">
+  <title>imp.pass · Password vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="imp.pass home">
+        <span class="brand-mark">i<span>.</span></span>
+        <span>imp.pass</span>
+      </a>
+      <span class="top-note"><span class="status-dot"></span> YOUR PRIVATE SPACE</span>
+    </header>
+
+    <section id="auth-view" class="auth-layout">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> LESS REMEMBERING. MORE LIVING.</div>
+        <h1>Your keys.<br>One <span>safe place.</span></h1>
+        <p class="hero-subtitle">A quieter place for all the passwords you shouldn't have to remember.</p>
+        <div class="hero-foot">
+          <span class="mini-lock">⌑</span>
+          <span>Personal vault <i>·</i> Encrypted storage</span>
+        </div>
+      </div>
+
+      <section class="auth-card" aria-labelledby="auth-title">
+        <div class="card-topline"><span class="tiny-square"></span> ACCESS YOUR VAULT</div>
+        <div class="auth-tabs" role="tablist" aria-label="Account options">
+          <button class="auth-tab active" id="login-tab" type="button" role="tab" aria-selected="true">Sign in</button>
+          <button class="auth-tab" id="register-tab" type="button" role="tab" aria-selected="false">Create account</button>
+        </div>
+        <h2 id="auth-title">Welcome back.</h2>
+        <p id="auth-description" class="muted">Your vault is right where you left it.</p>
+        <form id="auth-form">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <label for="master-password">Master password</label>
+          <div class="password-wrap">
+            <input id="master-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your master password" required minlength="1">
+            <button class="peek" type="button" data-toggle="master-password" aria-label="Show master password">SHOW</button>
+          </div>
+          <p id="register-hint" class="field-hint" hidden>Use a strong master password. It protects access to your vault.</p>
+          <button class="primary-button" id="auth-submit" type="submit"><span>Unlock vault</span><span aria-hidden="true">↗</span></button>
+          <p id="auth-message" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+        <p class="card-foot">Your vault. Your business.</p>
+      </section>
+    </section>
+
+    <section id="vault-view" class="vault-view" hidden>
+      <div class="vault-heading">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> YOUR PRIVATE SPACE</div>
+          <h1>Password <span>vault.</span></h1>
+          <p class="muted" id="welcome-user">Everything important, in one place.</p>
+        </div>
+        <button id="sign-out" class="secondary-button" type="button">Lock vault <span>↗</span></button>
+      </div>
+
+      <div class="vault-toolbar">
+        <div class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a password..." aria-label="Search saved passwords"></div>
+        <button id="add-password" class="primary-button add-button" type="button"><span>＋ Add password</span></button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><span class="stat-label">SAVED ENTRIES</span><strong id="entry-count">0</strong></div>
+        <div class="stat-card"><span class="stat-label">VAULT STATUS</span><strong class="secure-label"><span class="status-dot"></span> Locked in</strong></div>
+        <div class="stat-card stat-note"><span class="stat-label">A LITTLE REMINDER</span><p>One strong master password. No sticky notes.</p></div>
+      </div>
+
+      <div class="section-heading"><h2>Your passwords</h2><span id="results-label" class="muted">0 entries</span></div>
+      <div id="password-list" class="password-list"></div>
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">＋</div>
+        <h3>Your vault starts here.</h3>
+        <p>Add your first entry and give your memory a break.</p>
+        <button class="secondary-button" id="empty-add" type="button">Add first password <span>↗</span></button>
+      </div>
+      <p id="vault-message" class="form-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <footer class="footer"><span>imp.pass <span class="footer-dot">●</span> KEEP IT PERSONAL.</span><span>MADE FOR YOUR MEMORY, NOT YOUR BROWSER HISTORY.</span></footer>
+  </main>
+
+  <dialog id="entry-dialog" class="entry-dialog">
+    <form id="entry-form" method="dialog">
+      <div class="dialog-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> VAULT ENTRY</div><h2 id="dialog-title">Add a password</h2></div><button type="button" id="close-dialog" class="close-button" aria-label="Close">×</button></div>
+      <label for="entry-name">Name / website</label>
+      <input id="entry-name" name="entryName" placeholder="e.g. GitHub" required maxlength="200">
+      <label for="entry-password">Password</label>
+      <div class="password-wrap"><input id="entry-password" name="entryPassword" type="password" placeholder="Enter password to store" required><button class="peek" type="button" data-toggle="entry-password">SHOW</button></div>
+      <div class="dialog-actions"><button id="cancel-entry" class="secondary-button" type="button">Cancel</button><button id="save-entry" class="primary-button" type="submit"><span>Save entry</span><span>↗</span></button></div>
+      <p id="entry-message" class="form-message" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+</body>
+</html>
