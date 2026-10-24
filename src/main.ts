@@ -41,6 +41,10 @@ app.use(cors({
   optionsSuccessStatus: 200,
   credentials: true,
 }));
+
+// Serve the plain HTML/CSS/JS client from this same Express application.
+app.use(express.static("public"));
+
 // app.use(body);
 app.use(session); // custom session middleware
 
