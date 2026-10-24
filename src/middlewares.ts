@@ -171,8 +171,8 @@ export const session = async (
       res.status(err.code).send({ message: err.message })
       res.end()
     }
+    next();
   }
-  next();
 };
 
 // export const identify = async (sessionID: string) => {

@@ -11,10 +11,10 @@ import {
 } from "./middlewares";
 import { ERROR, ERRORS } from "./errorMap";
 import {
-  createPassword,
+  createPasswordEntry,
   deletePassword,
   retrieveAllPasswords,
-  retrievePassword,
+  retrievePasswordFromPWEntry,
   updatePassword,
   updatePid,
   deleteExpiredSessions
@@ -82,7 +82,7 @@ app.put("/new", verifyUser, (req, res) => {
   const { key, userId } = _sessionData;
 
   if (key && userId) {
-    createPassword({ pid: pID, password: password }, key, userId).then(() => {
+    createPasswordEntry({ pid: pID, password: password }, key, userId).then(() => {
       res.send({ message: "Created" });
     }).catch((err: ERROR) => {
       if (err.code) {
@@ -115,7 +115,7 @@ app.get("/password", verifyUser, (req, res) => {
           res.send(docs);
         });
       } else {
-        retrievePassword(pid, userId, key).then((pass) => {
+        retrievePasswordFromPWEntry(pid, userId, key).then((pass) => {
           res.send({ password: pass, pid: pid });
         }).catch((err: ERROR) => {
           res.status(err.code ?? 500).send({

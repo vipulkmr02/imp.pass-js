@@ -16,7 +16,7 @@ export async function id(pid: string) {
   return encodeToString(hash);
 }
 
-export async function createPassword(
+export async function createPasswordEntry(
   password: { pid: string; password: string },
   key: JsonWebKey,
   userId: string,
@@ -54,7 +54,7 @@ export async function retrievePasswordById(
   );
 }
 
-export async function retrievePassword(
+export async function retrievePasswordFromPWEntry(
   pid: string,
   userId: string,
   key: JsonWebKey,
