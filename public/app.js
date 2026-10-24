@@ -96,7 +96,12 @@
     } catch (error) {
       entries = [];
       renderEntries();
-      setMessage(vaultMessage, error.message || "Couldn't load your entries.", "error");
+      if (!sessionStorage.getItem(SESSION_KEY)) {
+        showAuth();
+        setMessage(authMessage, "Your session may have expired. Please sign in again.", "error");
+      } else {
+        setMessage(vaultMessage, error.message || "Couldn't load your entries.", "error");
+      }
     }
   }
 
