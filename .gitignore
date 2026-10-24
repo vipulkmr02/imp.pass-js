@@ -74,4 +74,9 @@ firestore*
 tests/
 .firebaserc
 *[dD]ocker*
+!/dotnet/Dockerfile
+!/dotnet/.dockerignore
 .vscode/
+
+priv-*
+priv_*

@@ -41,7 +41,7 @@ app.use(cors({
   optionsSuccessStatus: 200,
   credentials: true,
 }));
-app.use(body);
+// app.use(body);
 app.use(session); // custom session middleware
 
 app.get("/", (_, res) => {
