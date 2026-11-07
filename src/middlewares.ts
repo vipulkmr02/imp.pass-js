@@ -1,4 +1,4 @@
-import { NextFunction, Request, response, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import app from "./firebase";
 import { ERRORS } from "./errorMap";
 import {
@@ -128,51 +128,49 @@ export const session = async (
   next: NextFunction,
 ) => {
   const blockedUrls = ["/initSession"]
-  for (let url in blockedUrls)
-    if (req.url.endsWith(url))
-      return
+  for (let url in blockedUrls) {
+    if (req.url.endsWith(url)) {
+      next()
+    }
+  }
 
   // this is session middleware
   const authHeader = req.headers.authorization;
-
-  if (authHeader == undefined) next()
-  else {
-    if (authHeader?.match(/^Session/)) {
-      const sessionID = authHeader.split(" ")[1];
-      req.body._sessionID = sessionID;
-      const sessionData = await getSession(sessionID);
-      if (sessionData !== null) {
-        // if sessionData is found
-        // first we will check if 
-        // it's expired or not
-        const timeNow = new Date().valueOf();
-        const sessionExpired = sessionData.expireOn < timeNow;
-        if (sessionExpired) {
-          // if expired, we will delete
-          // the session on our database.
-          await deleteSession(sessionID);
-          res.status(ERRORS.SESSION_EXPIRED.code).send(
-            { message: ERRORS.SESSION_EXPIRED.message },
-          );
-          return;
-        }
-        req.body._sessionData = sessionData;
-      } else {
-        const err = ERRORS.SESSION_EXPIRED;
-        res.status(err.code).send({
-          message: err.message
-        })
-        res.end()
+  if (authHeader?.match(/^Session/)) {
+    const sessionID = authHeader.split(" ")[1];
+    req.body._sessionID = sessionID;
+    const sessionData = await getSession(sessionID);
+    if (sessionData !== null) {
+      // if sessionData is found
+      // first we will check if
+      // it's expired or not
+      const timeNow = new Date().valueOf();
+      const sessionExpired = sessionData.expireOn < timeNow;
+      if (sessionExpired) {
+        // if expired, we will delete
+        // the session on our database.
+        await deleteSession(sessionID);
+        res.status(ERRORS.SESSION_EXPIRED.code).send(
+          { message: ERRORS.SESSION_EXPIRED.message },
+        );
+        return;
       }
-      // if sessionData is not found in the Database,
-      // then the body._sessionData will be undefined
+      req.body._sessionData = sessionData;
     } else {
-      const err = ERRORS.INVALID_SESSION_ID;
-      res.status(err.code).send({ message: err.message })
+      const err = ERRORS.SESSION_EXPIRED;
+      res.status(err.code).send({
+        message: err.message
+      })
       res.end()
     }
-    next();
+    // if sessionData is not found in the Database,
+    // then the body._sessionData will be undefined
+  } else {
+    const err = ERRORS.INVALID_SESSION_ID;
+    res.status(err.code).send({ message: err.message })
+    res.end()
   }
+  next();
 };
 
 // export const identify = async (sessionID: string) => {
@@ -190,7 +188,7 @@ export const session = async (
 //     const docData = doc.data()
 //
 //     return docData;
-//   } 
+//   }
 // }
 
 export const body = (

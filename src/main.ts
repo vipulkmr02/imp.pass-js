@@ -75,7 +75,7 @@ app.get("/initSession", verifyUser, (req, res) => {
   }
 });
 
-app.get("/validateSession", session, (req, res) => {
+app.get("/validateSession", (req, res) => {
   if (req.body._sessionData) res.send({ sessionOk: true });
   else res.send(res.send({ sessionOk: false }));
 });
@@ -129,6 +129,8 @@ app.get("/password", verifyUser, (req, res) => {
       }
     } else res.status(500).send({ message: "BAD REQUEST" });
   } else {
+    if (!key) console.error("key not found")
+    if (!userId) console.error("userId not found")
     // means that 'verifyUser' didn't set the passwordHash probably because of
     // user isn't found verifyUser will already have sent the response so no
     // need to handle it here
