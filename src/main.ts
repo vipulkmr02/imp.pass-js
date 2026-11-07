@@ -12,12 +12,12 @@ import {
 import { ERROR, ERRORS } from "./errorMap";
 import {
   createPasswordEntry,
+  deleteExpiredSessions,
   deletePassword,
   retrieveAllPasswords,
   retrievePasswordFromPWEntry,
   updatePassword,
   updatePid,
-  deleteExpiredSessions
 } from "./data";
 
 const app = express();
@@ -35,7 +35,7 @@ app.use(cors({
     "Authorization",
     "email",
     "password",
-    "Access-Allow-Origin"
+    "Access-Allow-Origin",
   ],
   exposedHeaders: ["Content-Type", "Connection", "Cache-Control", "Session"],
   optionsSuccessStatus: 200,
@@ -47,6 +47,8 @@ app.use(express.static("public"));
 
 // app.use(body);
 app.use(session); // custom session middleware
+// this would get the sessionID from authorization header and populate
+// req.body._sessionData with the respective session data
 
 app.get("/", (_, res) => {
   res.send({ message: "The API is UP!" });
@@ -67,7 +69,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/identify", verifyUser, (req, res) => {
-})
+});
 
 app.get("/initSession", verifyUser, (req, res) => {
   if (req.body._sessionID) {
@@ -86,9 +88,11 @@ app.put("/new", verifyUser, (req, res) => {
   const { key, userId } = _sessionData;
 
   if (key && userId) {
-    createPasswordEntry({ pid: pID, password: password }, key, userId).then(() => {
-      res.send({ message: "Created" });
-    }).catch((err: ERROR) => {
+    createPasswordEntry({ pid: pID, password: password }, key, userId).then(
+      () => {
+        res.send({ message: "Created" });
+      },
+    ).catch((err: ERROR) => {
       if (err.code) {
         res.status(err.code).send({ message: err.message });
       } else {
@@ -129,8 +133,8 @@ app.get("/password", verifyUser, (req, res) => {
       }
     } else res.status(500).send({ message: "BAD REQUEST" });
   } else {
-    if (!key) console.error("key not found")
-    if (!userId) console.error("userId not found")
+    if (!key) console.error("key not found");
+    if (!userId) console.error("userId not found");
     // means that 'verifyUser' didn't set the passwordHash probably because of
     // user isn't found verifyUser will already have sent the response so no
     // need to handle it here
@@ -217,14 +221,12 @@ app.put("/changePassword", verifyUser, (req, res) => {
   } else res.status(500).send(ERRORS.WRONG_REQUEST);
 });
 
-
 // this here is a time based trigger
 // that deletes expired sessions from the database
 // this function will run every 5 second
 // and look for expired sessions and will delete them.
 
-
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
-  setInterval(deleteExpiredSessions, 5000)
+  setInterval(deleteExpiredSessions, 5000);
 });

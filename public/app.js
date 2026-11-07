@@ -32,7 +32,11 @@
     const response = await fetch(path, { ...options, headers });
     const raw = await response.text();
     let data = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      data = raw;
+    }
     if (!response.ok) {
       const message = data && typeof data === "object" && data.message
         ? data.message
@@ -56,8 +60,12 @@
     $("#auth-description").textContent = isLogin
       ? "Your vault is right where you left it."
       : "Create an account for your personal vault.";
-    $("#auth-submit span:first-child").textContent = isLogin ? "Unlock vault" : "Create account";
-    $("#master-password").autocomplete = isLogin ? "current-password" : "new-password";
+    $("#auth-submit span:first-child").textContent = isLogin
+      ? "Unlock vault"
+      : "Create account";
+    $("#master-password").autocomplete = isLogin
+      ? "current-password"
+      : "new-password";
     $("#register-hint").hidden = isLogin;
     setMessage(authMessage);
   }
@@ -65,7 +73,9 @@
   function showVault(email) {
     authView.hidden = true;
     vaultView.hidden = false;
-    $("#welcome-user").textContent = email ? "Signed in as " + email : "Your private collection, all in one place.";
+    $("#welcome-user").textContent = email
+      ? "Signed in as " + email
+      : "Your private collection, all in one place.";
     setMessage(vaultMessage);
   }
 
@@ -79,9 +89,11 @@
   async function authenticate(email, password) {
     const { response, data } = await request("/initSession", {
       method: "GET",
-      headers: { email, password }
+      headers: { email, password },
     });
-    const sessionId = data && data.sessionID ? data.sessionID : response.headers.get("Session");
+    const sessionId = data && data.sessionID
+      ? data.sessionID
+      : response.headers.get("Session");
     if (!sessionId) throw new Error("The server did not return a session ID.");
     sessionStorage.setItem(SESSION_KEY, sessionId);
   }
@@ -98,9 +110,17 @@
       renderEntries();
       if (!sessionStorage.getItem(SESSION_KEY)) {
         showAuth();
-        setMessage(authMessage, "Your session may have expired. Please sign in again.", "error");
+        setMessage(
+          authMessage,
+          "Your session may have expired. Please sign in again.",
+          "error",
+        );
       } else {
-        setMessage(vaultMessage, error.message || "Couldn't load your entries.", "error");
+        setMessage(
+          vaultMessage,
+          error.message || "Couldn't load your entries.",
+          "error",
+        );
       }
     }
   }
@@ -112,9 +132,12 @@
 
   function renderEntries() {
     const query = $("#search").value.trim().toLowerCase();
-    const filtered = entries.filter(entry => String(entry.pID || "").toLowerCase().includes(query));
+    const filtered = entries.filter((entry) =>
+      String(entry.pID || "").toLowerCase().includes(query)
+    );
     $("#entry-count").textContent = String(entries.length);
-    $("#results-label").textContent = filtered.length + (filtered.length === 1 ? " entry" : " entries");
+    $("#results-label").textContent = filtered.length +
+      (filtered.length === 1 ? " entry" : " entries");
     const list = $("#password-list");
     list.replaceChildren();
 
@@ -138,7 +161,12 @@
       actions.className = "entry-actions";
       actions.append(
         actionButton("✎", "Edit entry", () => openEntryDialog(entry)),
-        actionButton("⌫", "Delete entry", () => deleteEntry(entry.pID), "delete")
+        actionButton(
+          "⌫",
+          "Delete entry",
+          () => deleteEntry(entry.pID),
+          "delete",
+        ),
       );
       top.append(icon, meta, actions);
 
@@ -147,7 +175,9 @@
       const value = document.createElement("span");
       value.className = "secret-value";
       const isRevealed = revealed.has(entry.pID);
-      value.textContent = isRevealed ? String(entry.password ?? "") : "••••••••••••";
+      value.textContent = isRevealed
+        ? String(entry.password ?? "")
+        : "••••••••••••";
       const toggle = document.createElement("button");
       toggle.type = "button";
       toggle.className = "secret-toggle";
@@ -165,9 +195,17 @@
       copy.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(String(entry.password ?? ""));
-          setMessage(vaultMessage, "Password copied. Clipboard contents may remain available to other apps.", "success");
+          setMessage(
+            vaultMessage,
+            "Password copied. Clipboard contents may remain available to other apps.",
+            "success",
+          );
         } catch {
-          setMessage(vaultMessage, "Clipboard access was blocked by your browser.", "error");
+          setMessage(
+            vaultMessage,
+            "Clipboard access was blocked by your browser.",
+            "error",
+          );
         }
       });
       secret.append(value, toggle, copy);
@@ -184,7 +222,8 @@
       $("#empty-add").hidden = true;
     } else {
       $("#empty-state h3").textContent = "Your vault starts here.";
-      $("#empty-state p").textContent = "Add your first entry and give your memory a break.";
+      $("#empty-state p").textContent =
+        "Add your first entry and give your memory a break.";
       $("#empty-add").hidden = false;
     }
   }
@@ -206,22 +245,32 @@
     $("#entry-name").value = entry ? entry.pID : "";
     $("#entry-password").value = entry ? entry.password : "";
     $("#entry-password").required = true;
-    $("#save-entry span:first-child").textContent = entry ? "Update entry" : "Save entry";
+    $("#save-entry span:first-child").textContent = entry
+      ? "Update entry"
+      : "Save entry";
     setMessage($("#entry-message"));
     entryDialog.showModal();
     $("#entry-name").focus();
   }
 
   async function deleteEntry(pid) {
-    if (!window.confirm('Delete the "' + pid + '" entry? This cannot be undone.')) return;
+    if (
+      !window.confirm('Delete the "' + pid + '" entry? This cannot be undone.')
+    ) return;
     try {
-      await request("/delete?pID=" + encodeURIComponent(pid), { method: "GET" });
-      entries = entries.filter(entry => entry.pID !== pid);
+      await request("/delete?pID=" + encodeURIComponent(pid), {
+        method: "GET",
+      });
+      entries = entries.filter((entry) => entry.pID !== pid);
       revealed.delete(pid);
       renderEntries();
       setMessage(vaultMessage, "Entry deleted.", "success");
     } catch (error) {
-      setMessage(vaultMessage, error.message || "Couldn't delete that entry.", "error");
+      setMessage(
+        vaultMessage,
+        error.message || "Couldn't delete that entry.",
+        "error",
+      );
     }
   }
 
@@ -234,11 +283,23 @@
     const password = $("#master-password").value;
     const submit = $("#auth-submit");
     submit.disabled = true;
-    setMessage(authMessage, authMode === "login" ? "Unlocking your vault…" : "Creating your account…");
+    setMessage(
+      authMessage,
+      authMode === "login" ? "Unlocking your vault…" : "Creating your account…",
+    );
     try {
       if (authMode === "register") {
-        await request("/register", { method: "POST", body: JSON.stringify({ email, password }) });
-        await authenticate(email, password);
+        let { data, response } = await request("/register", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (response != 200) {
+          console.error("Register request failed");
+        }
+        if (data.message === "User Registered") {
+          await authenticate(email, password);
+        }
       } else {
         await authenticate(email, password);
       }
@@ -247,7 +308,11 @@
       await loadEntries();
     } catch (error) {
       sessionStorage.removeItem(SESSION_KEY);
-      setMessage(authMessage, error.message || "Something went wrong. Please try again.", "error");
+      setMessage(
+        authMessage,
+        error.message || "Something went wrong. Please try again.",
+        "error",
+      );
     } finally {
       submit.disabled = false;
     }
@@ -276,42 +341,59 @@
       return;
     }
     save.disabled = true;
-    setMessage($("#entry-message"), editingPid ? "Updating entry…" : "Saving entry…");
+    setMessage(
+      $("#entry-message"),
+      editingPid ? "Updating entry…" : "Saving entry…",
+    );
     try {
       if (editingPid && editingPid !== pID) {
         await request("/update?pID=" + encodeURIComponent(editingPid), {
           method: "PUT",
-          body: JSON.stringify({ pID })
+          body: JSON.stringify({ pID }),
         });
         await request("/update?pID=" + encodeURIComponent(pID), {
           method: "PUT",
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ password }),
         });
       } else if (editingPid) {
         await request("/update?pID=" + encodeURIComponent(editingPid), {
           method: "PUT",
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ password }),
         });
       } else {
-        await request("/new", { method: "PUT", body: JSON.stringify({ pID, password }) });
+        await request("/new", {
+          method: "PUT",
+          body: JSON.stringify({ pID, password }),
+        });
       }
       entryDialog.close();
       await loadEntries();
-      setMessage(vaultMessage, editingPid ? "Entry updated." : "Entry saved.", "success");
+      setMessage(
+        vaultMessage,
+        editingPid ? "Entry updated." : "Entry saved.",
+        "success",
+      );
     } catch (error) {
-      setMessage($("#entry-message"), error.message || "Couldn't save this entry.", "error");
+      setMessage(
+        $("#entry-message"),
+        error.message || "Couldn't save this entry.",
+        "error",
+      );
     } finally {
       save.disabled = false;
     }
   });
 
-  document.querySelectorAll("[data-toggle]").forEach(button => {
+  document.querySelectorAll("[data-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
       const input = document.getElementById(button.dataset.toggle);
       const show = input.type === "password";
       input.type = show ? "text" : "password";
       button.textContent = show ? "HIDE" : "SHOW";
-      button.setAttribute("aria-label", (show ? "Hide " : "Show ") + input.name);
+      button.setAttribute(
+        "aria-label",
+        (show ? "Hide " : "Show ") + input.name,
+      );
     });
   });
 

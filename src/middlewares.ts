@@ -40,11 +40,16 @@ export const verifyUser = (
   next: NextFunction,
 ) => {
   console.log("[VERIFYING USER]");
-  if (req.body["_sessionID"]) {
+
+  if (
+    req.body !== undefined &&
+    (req.body["_sessionID"] !== undefined || req.body["_sessionID"] !== null)
+  ) {
     console.log("Session ID found");
     next();
     return;
   }
+
   const db = app.firestore();
   const email = req.headers.email;
   const password = req.headers.password;
@@ -57,14 +62,15 @@ export const verifyUser = (
       db.doc(`users/${uid}`).get().then(
         async (doc) => {
           if (!doc.exists) {
+            console.error(ERRORS.USER_NOT_FOUND.message);
             const err = ERRORS.USER_NOT_FOUND;
-            res.status(err.code).send({
-              message: err.message,
-            });
+            res.status(err.code).send({ message: err.message });
             res.end();
           } else {
+            console.log(`User ${email} found`);
             const passwordHash = doc.get("passwordHash");
             if (typeof password === "string") {
+              console.log("Verifying password hash");
               await verifyHash(password, decodeToString(passwordHash)).then(
                 async (equal) => {
                   if (!equal) {
@@ -77,8 +83,11 @@ export const verifyUser = (
                   } else {
                     const key = await getKey(password);
                     // create session
+                    console.log("Password verified successfully");
+                    console.log("Creating session");
                     const session = await createSession(uid, key);
                     res.setHeader("Session", session.id); // this header is for frontend client
+                    if (req.body == undefined) req.body = {};
                     req.body._sessionID = session.id;
                     req.body._sessionData = session.data;
                   }
@@ -110,7 +119,8 @@ export const changePassword = async (opts: {
     const newHash = await hashPassword(newPassword, 10);
     userDoc.update({ passwordHash: newHash });
     const passwordCollection = await passwordCol.get();
-    let recordsUpdated = 0; for (const doc of passwordCollection.docs) {
+    let recordsUpdated = 0;
+    for (const doc of passwordCollection.docs) {
       const enc: { cipher: string; iv: string } = doc.get("enc");
       const password = await decryptwjkey(enc, key);
       const newEnc = await encryptwjkey(password, newKey);
@@ -127,48 +137,50 @@ export const session = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const blockedUrls = ["/initSession"]
-  for (let url in blockedUrls) {
-    if (req.url.endsWith(url)) {
-      next()
-    }
-  }
-
-  // this is session middleware
-  const authHeader = req.headers.authorization;
-  if (authHeader?.match(/^Session/)) {
-    const sessionID = authHeader.split(" ")[1];
-    req.body._sessionID = sessionID;
-    const sessionData = await getSession(sessionID);
-    if (sessionData !== null) {
-      // if sessionData is found
-      // first we will check if
-      // it's expired or not
-      const timeNow = new Date().valueOf();
-      const sessionExpired = sessionData.expireOn < timeNow;
-      if (sessionExpired) {
-        // if expired, we will delete
-        // the session on our database.
-        await deleteSession(sessionID);
-        res.status(ERRORS.SESSION_EXPIRED.code).send(
-          { message: ERRORS.SESSION_EXPIRED.message },
-        );
-        return;
+  // for these URLs session middleware should not run
+  const blockedUrls = ["/register", "/initSession"];
+  if (!blockedUrls.includes(req.url)) {
+    // this is session middleware main code
+    // it gets the sessionData from
+    const authHeader = req.headers.authorization;
+    if (authHeader?.match(/^Session/)) {
+      console.log("Authorization Header valid");
+      const sessionID = authHeader.split(" ")[1];
+      if (req.body == undefined) req.body = {};
+      req.body._sessionID = sessionID;
+      const sessionData = await getSession(sessionID);
+      if (sessionData !== null) {
+        // if sessionData is found
+        // first we will check if
+        // it's expired or not
+        console.log("session data found");
+        const timeNow = new Date().valueOf();
+        const sessionExpired = sessionData.expireOn < timeNow;
+        if (sessionExpired) {
+          // if expired, we will delete
+          // the session on our database.
+          await deleteSession(sessionID);
+          let err = ERRORS.SESSION_EXPIRED;
+          console.error(err.message);
+          res.status(err.code).send({ message: err.message });
+          return;
+        }
+        req.body._sessionData = sessionData;
+      } else {
+        console.log("Authorization Header invalid");
+        const err = ERRORS.SESSION_EXPIRED;
+        res.status(err.code).send({ message: err.message });
+        res.end();
       }
-      req.body._sessionData = sessionData;
+      // if sessionData is not found in the Database,
+      // then the body._sessionData will be undefined
     } else {
-      const err = ERRORS.SESSION_EXPIRED;
-      res.status(err.code).send({
-        message: err.message
-      })
-      res.end()
+      const err = ERRORS.INVALID_SESSION_ID;
+      res.status(err.code).send({ message: err.message });
+      res.end();
     }
-    // if sessionData is not found in the Database,
-    // then the body._sessionData will be undefined
   } else {
-    const err = ERRORS.INVALID_SESSION_ID;
-    res.status(err.code).send({ message: err.message })
-    res.end()
+    console.log("Ignoring session middleware, URL is blocked");
   }
   next();
 };
